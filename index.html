@@ -72,6 +72,13 @@ h2{font-size:clamp(22px,4.6vw,28px);line-height:1.25;font-weight:700;letter-spac
 .cta.alt{background:#fff;box-shadow:0 8px 0 #c9d4ee}
 .cta.block{width:100%}
 .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.heard{background:rgba(255,255,255,.08);border:1px solid rgba(250,204,21,.45);border-radius:18px;padding:14px 16px;margin:18px 0 4px}
+.heard .hd{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--gold);font-size:15px;margin-bottom:8px}
+.heard ul{list-style:none;display:grid;gap:6px}
+.heard li{font-size:14px;line-height:1.45;padding-left:18px;position:relative;opacity:.95}
+.heard li:before{content:"";position:absolute;left:2px;top:8px;width:7px;height:7px;border-radius:50%;background:var(--orange)}
+.asked{display:inline-flex;align-items:center;gap:6px;background:#fff5d6;color:#7a4b00;border:1px solid #f5d77a;font-size:12.5px;font-weight:600;border-radius:999px;padding:4px 12px;margin-top:10px}
+.asked svg{width:14px;height:14px;flex:none}
 .legend span{font-size:13px;background:rgba(255,255,255,.08);border-radius:999px;padding:6px 12px}
 
 /* round splash */
@@ -199,28 +206,29 @@ h2{font-size:clamp(22px,4.6vw,28px);line-height:1.25;font-weight:700;letter-spac
 const CHAIN = ["Immediate Supervisor","Team Lead","Division Leadership","Executive Director"];
 
 const ROUNDS = [
- { id:"chain", title:"Build the Chain", blurb:"Put the internal communication chain in order, from the first stop to the last.", rule:"Tap the levels in order. Tap a filled slot to undo." },
- { id:"next", title:"Your Next Move", blurb:"Three real situations, inside the office and with schools. Pick the move that follows protocol.", rule:"100 points per correct answer, plus streak bonuses.",
+ { id:"chain", title:"Build the Chain", blurb:"You asked for a clear chain of command. Put the internal communication chain in order, from the first stop to the last.", rule:"Tap the levels in order. Tap a filled slot to undo." },
+ { id:"next", title:"Your Next Move", blurb:"Three situations based on your survey feedback. Pick the move that follows protocol.", rule:"100 points per correct answer, plus streak bonuses.",
    items:[
-    { k:"Internal protocol", s:"You have a routine question about logging an off-site day at a school.", q:"Who do you go to first?",
+    { k:"Internal protocol", asked:"Who do we go to, and when?", s:"You have a routine question about logging an off-site day at a school.", q:"Who do you go to first?",
       o:["The Executive Director","Your immediate supervisor","Whoever is free in the office","Division Leadership"], a:1,
       why:"Start with your supervisor: routine questions begin at the first level, where most can be resolved." },
-    { k:"External (field) protocol", s:"A School Administrative Assistant (SAA) texts your personal cell asking about a form.", q:"What is the best response?",
+    { k:"External (field) protocol", asked:"In an urgent matter, can I copy my supervisor?", s:"Something urgent comes up with a school principal and you need to respond right away.", q:"What is the best move?",
+      o:["Handle it alone and don't copy anyone","Wait to respond until your supervisor is free","Respond from your LAUSD email and copy your supervisor","Text the principal from your personal cell"], a:2,
+      why:"Keep them informed: even when you act quickly, copying your supervisor keeps them aware and ready to support." },
+    { k:"External (field) protocol", asked:"How should we communicate with the field?", s:"A School Administrative Assistant (SAA) texts your personal cell asking about a form.", q:"What is the best response?",
       o:["Answer quickly by text, it's easier","Give them your personal number for next time","Ignore the text","Respond from your LAUSD email or work line and copy your team"], a:3,
-      why:"Avoid personal cell phones: move the conversation to a district channel so there's a record and your team can follow up." },
-    { k:"External (field) protocol", s:"Your team is announcing a procedure change to every school.", q:"Which approach keeps the message consistent?",
-      o:["Each person tells their own schools in their own words","Coordinate one message so all schools get the same information at the same time","Only tell schools that ask","Post it to a personal social account"], a:1,
-      why:"One consistent message: coordinated communication means every school hears the same thing at the same time." }
+      why:"Avoid personal cell phones: move the conversation to a district channel so there's a record and your team can follow up." }
    ]},
  { id:"lightning", title:"Lightning Round", blurb:"Three quick statements. Is it a Protocol to follow or a Pitfall to avoid? Faster answers earn bonus points.", rule:"10 seconds per statement. Speed bonus up to +50.",
    items:[
     { t:"Texting a principal from my personal phone is fine if it's quick.", a:false, why:"Pitfall: use your LAUSD email or work phone for district business." },
-    { t:"Copying my supervisor on field communication keeps everyone aware.", a:true, why:"Protocol: keep your team aware." },
-    { t:"For routine matters, going straight to the Executive Director saves time.", a:false, why:"Pitfall: follow the chain; don't bypass it for routine matters." }
+    { asked:"Email etiquette", t:"I sent an email two minutes ago, so I can walk over and expect an answer now.", a:false, why:"Pitfall: allow time to respond. If it's truly urgent, say so up front or call the work line." },
+    { asked:"One message for everyone", t:"Sharing updates with the whole team at once means everyone hears the same message.", a:true, why:"Protocol: one consistent message keeps everyone on the same page." }
    ]}
 ];
 const TOTAL = ROUNDS.reduce((n,r)=>n+(r.items?r.items.length:1),0);
 const NR = ROUNDS.length;
+const askedChip = it => it.asked ? `<div><span class="asked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-5A8 8 0 1 1 21 12z"/></svg>You asked: ${esc(it.asked)}</span></div>` : "";
 
 /* ---------- STATE ---------- */
 const S = { name:"", score:0, streak:0, best:0, correct:0, misses:[], round:0, step:0, sound:false };
@@ -328,6 +336,8 @@ function intro(){
     <h1>Clear <span>Channels</span><br>Challenge</h1>
     <div class="tag">Clarity is Kindness</div>
     <p class="lead">Quick check on internal and field communication. Get them all right to earn the <b>Clear Channels Champion</b> badge.</p>
+    <div class="heard"><div class="hd">${ICON.chat.replace('<svg ','<svg width="18" height="18" ')} You asked, we listened</div>
+      <ul><li>Who to contact, and when</li><li>Copying your supervisor on urgent matters</li><li>One consistent message for everyone</li></ul></div>
     <div class="stats">
       <div class="stat"><b>${NR}</b><span>rounds</span></div>
       <div class="stat"><b>${TOTAL}</b><span>challenges</span></div>
@@ -405,7 +415,7 @@ function mcq(){
   <section class="screen">
     <div class="qmeta"><span>Round ${S.round+1} · ${R.title}</span><span>${S.step+1} / ${R.items.length}</span></div>
     <div class="card">
-      <div class="kicker">${it.k}</div>
+      <div class="kicker">${it.k}</div>${askedChip(it)}
       <div class="scenario">${ICON.chat}<span>${esc(it.s)}</span></div>
       <h2>${esc(it.q)}</h2>
       <div class="opts" style="margin-top:16px">${order.map((oi,k)=>`<button class="opt" data-oi="${oi}"><span class="key">${letters[k]}</span><span>${esc(it.o[oi])}</span></button>`).join("")}</div>
@@ -439,7 +449,7 @@ function lightning(){
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center"><span class="kicker">Protocol or Pitfall?</span><span class="bolt" id="secs">10s</span></div>
       <div class="timer"><i id="bar"></i></div>
-      <div class="statement">“${esc(it.t)}”</div>
+      ${askedChip(it)}<div class="statement">“${esc(it.t)}”</div>
       <div class="tf">
         <button class="yes" data-v="1">Protocol<small>Follow it</small></button>
         <button class="no" data-v="0">Pitfall<small>Avoid it</small></button>
@@ -501,6 +511,7 @@ function results(){
       <div class="meta">Communication Protocols</div>
     </div></div>` : `
     <p class="lead" style="max-width:480px;margin:0 auto">So close! A perfect ${TOTAL}/${TOTAL} unlocks the <b>Clear Channels Champion</b> badge and a reward. Review below, then take another run.</p>`}
+    <div class="heard" style="text-align:left;max-width:520px;margin:18px auto 0"><div class="hd">Still have questions?</div><ul><li>Bring them to the live Q&amp;A. Your survey responses are shaping today's discussion.</li></ul></div>
     ${S.misses.length?`<div class="review card"><h3>Review what you missed</h3><ul>${S.misses.map(m=>`<li>${m}</li>`).join("")}</ul></div>`:""}
     <div class="actions">
       <button class="cta ${perfect?"alt":""} block" id="again">${perfect?"Play again":"Try for a perfect score"}</button>
